@@ -411,7 +411,8 @@ final class MainModel: ObservableObject {
             if newFolder != nil { createAndStart() } else { NSSound.beep() }
             return true
         }
-        if key == .optionsDown { if moment != .running { optionRow = optionRow ?? 0 }; return true }
+        // the launch options belong to a folder's new session
+        if key == .optionsDown { if moment == .step { optionRow = optionRow ?? 0 }; return true }
         if key == .optionsUp { optionRow = nil; return true }
         if let optionRow { return handleOptions(key, optionRow) }
         switch key {

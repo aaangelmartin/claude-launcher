@@ -61,7 +61,7 @@ What needs you comes first.
 
 ### Launch options
 
-When a session starts or resumes, pills at the foot of the list show how: **model**, **effort** and **permissions**. A click on one, or **⌥↓**, opens them. The bottom bar itself always says what the keys do where you are, with your plan use on the right.
+Inside a folder, the **New session** line shows how it will start: **model**, **effort** and **permissions**. A click on one, or **⌥↓**, opens them under the list. Starting at once (your shortcut, **⌘↵**, **⌘N**) uses the defaults. The bottom bar always says what the keys do where you are, with your plan use on the right.
 
 ![Launch options](docs/options.png)
 
@@ -85,7 +85,7 @@ On the right of the bottom bar, everywhere: your five-hour session and weekly us
 | **⌘↵** | start a new session at once |
 | **⌘N** | create the folder typed and start Claude in it |
 | **Tab** | highlight the first line; on a folder, complete its path |
-| **⌥↓ ⌥↑** | open and fold the launch options |
+| **⌥↓ ⌥↑** | in a folder, open and fold the launch options |
 | **esc** | back out one step: the folder, what is typed, then the window |
 | **⌘,** | the setup again (shortcut, checks) |
 | **⌘Q** | quit |

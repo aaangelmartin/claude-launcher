@@ -22,7 +22,7 @@ struct OptionsSection: View {
     let theme: AppTheme
     @Namespace private var focus
 
-    static let foldedHeight: CGFloat = 40
+    static let foldedHeight: CGFloat = 0
     static let rowHeight: CGFloat = 40
     static let sliderHeight: CGFloat = 78
     static let modesHeight: CGFloat = 40
@@ -77,21 +77,8 @@ struct OptionsSection: View {
     /// the running sessions the keys that act on them), on the right the plan's use
     /// folded: how a new or resumed session is launched, ⌥↓ (or a click) to change it. the keys and
     /// the plan's use live in the command bar under it
-    private var summary: some View {
-        HStack(spacing: 0) {
-            launchValues
-            Spacer(minLength: 8)
-            KeyCap(key: "⌥↓", theme: theme)
-                .opacity(0.8)
-                .help("Change model, effort and permissions")
-        }
-        .font(theme.chip)
-        .padding(.leading, 16)
-        .padding(.trailing, 20)
-        .frame(height: Self.foldedHeight)
-        .contentShape(Rectangle())
-        .onTapGesture { model.openOptions() }
-    }
+    /// folded, the options take no room: their values sit on the New session line (LaunchSummary)
+    private var summary: some View { Color.clear.frame(height: 0) }
 
     /// the window's shortcut as typed on its key caps, ⌥C unless another was picked
     static var shortcutText: String { KeyboardShortcuts.getShortcut(for: .openClaude)?.description ?? "⌥C" }
@@ -131,6 +118,46 @@ struct OptionsSection: View {
         .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5))
         .contentShape(Rectangle())
         .onTapGesture { model.openOptions(at: index) }
+    }
+}
+
+/// how a new session will start, on its own line: the model, the effort and the permission mode,
+/// each painted as claude code paints it and opening its option on a click, then ⌥↓
+struct LaunchSummary: View {
+    @ObservedObject var model: MainModel
+    let theme: AppTheme
+
+    var body: some View {
+        HStack(spacing: 14) {
+            value(LaunchOptions.model) {
+                ModelName(label: model.display(model.choice(of: LaunchOptions.model), of: LaunchOptions.model), on: true, theme: theme)
+            }
+            value(LaunchOptions.effort) {
+                let choice = model.choice(of: LaunchOptions.effort)
+                PaintedText(text: choice.label, paint: choice.paint, font: theme.chip, bold: true)
+            }
+            value(LaunchOptions.permissions) {
+                let choice = model.choice(of: LaunchOptions.permissions)
+                HStack(spacing: 5) {
+                    if let symbol = choice.symbol {
+                        PaintedText(text: symbol, paint: choice.paint, font: .system(size: 10))
+                    }
+                    PaintedText(text: theme.say(choice.label), paint: choice.paint == .plain(CC.inactive) ? .plain(RGB(255, 255, 255)) : choice.paint, font: theme.chip, bold: true)
+                }
+            }
+            KeyCap(key: "⌥↓", theme: theme)
+                .help("Change model, effort and permissions")
+        }
+        .font(theme.chip)
+        .lineLimit(1)
+        .fixedSize()
+    }
+
+    private func value<Content: View>(_ index: Int, @ViewBuilder _ content: () -> Content) -> some View {
+        content()
+            .contentShape(Rectangle())
+            .onTapGesture { model.openOptions(at: index) }
+            .help("Change it")
     }
 }
 

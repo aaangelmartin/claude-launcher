@@ -62,10 +62,10 @@ struct MainView: View {
                         : .opacity)
 
             // how a session starts, where one does
-            // how a session starts, where one does: pills at the foot of the list, no line of their own
-            if model.moment != .running {
+            // in a folder, the launch options open under the list (⌥↓, or a click on a value on the
+            // New session line); folded they take no room
+            if model.moment == .step {
                 OptionsSection(model: model, theme: theme)
-                    .transition(.opacity)
             }
             // the keys that act here, and the plan's use, everywhere
             divider
@@ -689,7 +689,7 @@ private struct StepList: View {
                     case .new:
                         ListLine(model: model, index: i, icon: AnyView(Image(systemName: "plus").font(.system(size: 12, weight: .medium)).foregroundStyle(theme.textRow)),
                                  title: theme.say("New session"), folder: nil,
-                                 trailing: AnyView(Text("↵").foregroundStyle(theme.textMuted.opacity(i == model.selected ? 0.9 : 0))), theme: theme)
+                                 trailing: AnyView(LaunchSummary(model: model, theme: theme)), theme: theme)
                         if items.count > 1 {
                             SectionLabel(title: "Sessions", hint: "", theme: theme)
                         }
