@@ -19,11 +19,19 @@ One shortcut for Claude Code on your Mac. Press **⌥C** anywhere to see every C
 
 ## Install
 
+<p>
+  <a href="https://github.com/aaangelmartin/claude-launcher/releases/latest/download/claude-launcher.zip"><img alt="Download for macOS" src="https://img.shields.io/badge/Download_for_macOS-D97757?style=for-the-badge&logo=apple&logoColor=white"></a>
+</p>
+
+Download the zip, open it and move **Claude Launcher** to Applications. It is signed and notarized by Apple, so it opens like any other app.
+
+Or with [Homebrew](https://brew.sh), in one line:
+
 ```sh
 brew install --cask aaangelmartin/tap/claude-launcher
 ```
 
-Then open **Claude Launcher** from Applications. The first launch walks you through a short setup: it checks that Claude Code is installed, asks for permission to control Terminal, and lets you pick your shortcut.
+Then open **Claude Launcher**. The first launch walks you through a short setup: it checks that Claude Code is installed, asks for permission to control Terminal, and lets you pick your shortcut.
 
 ### Requirements
 
@@ -119,7 +127,8 @@ swift test                  # the tests
 ## Uninstall
 
 ```sh
-brew uninstall --cask claude-launcher
+brew uninstall --cask claude-launcher        # installed with Homebrew
+rm -rf "/Applications/Claude Launcher.app"    # installed from the zip
 ```
 
 Remove it from System Settings → General → Login Items if it is still listed.

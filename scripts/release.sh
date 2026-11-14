@@ -1,5 +1,6 @@
 #!/bin/zsh
-# builds the release zip: dist/claude-launcher-v<version>.zip, signed with a secure timestamp,
+# builds the release zip: dist/claude-launcher.zip (one name for every version, so the readme's
+# download link always takes the latest), signed with a secure timestamp,
 # notarized and stapled, and prints its sha256 for the homebrew cask.
 #   NOTARY_PROFILE  the notarytool keychain profile (default "claude-launcher"), stored once with
 #                     xcrun notarytool store-credentials claude-launcher --key AuthKey.p8 --key-id ID --issuer UUID
@@ -11,7 +12,7 @@ cd "${0:A:h}/.."
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info.plist)"
 APP="build/Claude Launcher.app"
 DIST="dist"
-ZIP="$DIST/claude-launcher-v$VERSION.zip"
+ZIP="$DIST/claude-launcher.zip"
 
 SIGN_TIMESTAMP=1 ./scripts/build.sh
 
@@ -34,6 +35,6 @@ if [[ "${SKIP_NOTARIZE:-0}" != 1 ]]; then
   spctl --assess --type execute --verbose "$APP"
 fi
 
-echo "-> packing $ZIP"
+echo "-> packing $ZIP (version $VERSION)"
 ditto -c -k --keepParent "$APP" "$ZIP"
 echo "sha256 $(shasum -a 256 "$ZIP" | awk '{print $1}')"
