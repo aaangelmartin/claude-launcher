@@ -78,16 +78,15 @@ struct OptionsSection: View {
     /// folded: how a new or resumed session is launched, ⌥↓ (or a click) to change it. the keys and
     /// the plan's use live in the command bar under it
     private var summary: some View {
-        HStack(spacing: 2) {
-            KeyCap(key: "⌥↓", theme: theme)
-                .padding(.leading, 8)
-                .padding(.trailing, 2)
-                .help("Change model, effort and permissions")
+        HStack(spacing: 0) {
             launchValues
             Spacer(minLength: 8)
+            KeyCap(key: "⌥↓", theme: theme)
+                .opacity(0.8)
+                .help("Change model, effort and permissions")
         }
         .font(theme.chip)
-        .padding(.leading, 12)
+        .padding(.leading, 16)
         .padding(.trailing, 20)
         .frame(height: Self.foldedHeight)
         .contentShape(Rectangle())
@@ -97,8 +96,9 @@ struct OptionsSection: View {
     /// the window's shortcut as typed on its key caps, ⌥C unless another was picked
     static var shortcutText: String { KeyboardShortcuts.getShortcut(for: .openClaude)?.description ?? "⌥C" }
 
+    /// each value on a pill with a chevron, as claude's composer shows its model picker
     private var launchValues: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 8) {
             item(LaunchOptions.model) {
                 ModelName(label: model.display(model.choice(of: LaunchOptions.model), of: LaunchOptions.model), on: true, theme: theme)
             }
@@ -119,11 +119,18 @@ struct OptionsSection: View {
     }
 
     private func item<Content: View>(_ index: Int, @ViewBuilder _ content: () -> Content) -> some View {
-        content()
-            .padding(.horizontal, 8)
-            .frame(height: 28)
-            .contentShape(Rectangle())
-            .onTapGesture { model.openOptions(at: index) }
+        HStack(spacing: 6) {
+            content()
+            Image(systemName: "chevron.down")
+                .font(.system(size: 8, weight: .semibold))
+                .foregroundStyle(theme.textMuted.opacity(0.8))
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 26)
+        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 7))
+        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5))
+        .contentShape(Rectangle())
+        .onTapGesture { model.openOptions(at: index) }
     }
 }
 

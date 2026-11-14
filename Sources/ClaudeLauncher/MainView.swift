@@ -62,8 +62,8 @@ struct MainView: View {
                         : .opacity)
 
             // how a session starts, where one does
+            // how a session starts, where one does: pills at the foot of the list, no line of their own
             if model.moment != .running {
-                divider
                 OptionsSection(model: model, theme: theme)
                     .transition(.opacity)
             }
@@ -548,52 +548,22 @@ private struct ScrollingList<Content: View>: View {
     }
 }
 
-/// a folder that does not exist yet, to start a new project in. its own section, apart from the
-/// folders found; lit, it takes claude's orange. enter, the shortcut or ⌘N make it and start claude
+/// a folder that does not exist yet, to start a new project in: its own section, a line like the
+/// others. enter, the shortcut or ⌘N make it and start claude in it
 private struct NewFolderLine: View {
     @ObservedObject var model: MainModel
     let index: Int
     let path: String
     let theme: AppTheme
 
-    private let clay = Color(hex: 0xD97757)
-
     var body: some View {
-        let on = model.selected == index
-        let shown = FolderPath.display(path)
         VStack(alignment: .leading, spacing: 0) {
             SectionLabel(title: "New project", hint: "", theme: theme)
-            HStack(spacing: 0) {
-                Image(systemName: "folder.badge.plus")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(clay)
-                    .frame(width: MainView.barHeight - 16)
-                    .padding(.trailing, 8)
-                Text(theme.say("Create folder"))
-                    .font(theme.row)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(on ? theme.text : theme.textRow)
-                Text(shown.isEmpty ? "~" : shown)
-                    .font(theme.label)
-                    .foregroundStyle(theme.textMuted)
-                    .lineLimit(1)
-                    .truncationMode(.head)
-                    .padding(.leading, 10)
-                Spacer(minLength: 12)
-                KeyHint(keys: ["⌘N"], label: "Create and start", theme: theme)
-            }
-            .padding(.trailing, 12)
-            .frame(height: MainView.rowHeight)
-            .background {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(on ? clay.opacity(0.16) : clay.opacity(0.05))
-                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(clay.opacity(on ? 0.45 : 0.18), lineWidth: 0.5))
-            }
-            .padding(.horizontal, 8)
-            .contentShape(Rectangle())
-            .onContinuousHover { phase in if case .active = phase { model.point(at: index) } }
-            .onTapGesture { model.act(on: index) }
-            .animation(.easeOut(duration: 0.1), value: on)
+            ListLine(model: model, index: index,
+                     icon: AnyView(Image(systemName: "folder.badge.plus").font(.system(size: 13)).foregroundStyle(theme.icon)),
+                     title: theme.say("Create folder"), folder: path,
+                     trailing: AnyView(KeyHint(keys: ["⌘N"], label: "Create and start", theme: theme)),
+                     theme: theme)
         }
     }
 }

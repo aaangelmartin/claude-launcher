@@ -61,7 +61,7 @@ What needs you comes first.
 
 ### Launch options
 
-When a session starts or resumes, a row above the bottom bar shows how: **model**, **effort** and **permissions**. **⌥↓** (or a click on a value) opens them. The bottom bar itself always says what the keys do where you are, with your plan use on the right.
+When a session starts or resumes, pills at the foot of the list show how: **model**, **effort** and **permissions**. A click on one, or **⌥↓**, opens them. The bottom bar itself always says what the keys do where you are, with your plan use on the right.
 
 ![Launch options](docs/options.png)
 
