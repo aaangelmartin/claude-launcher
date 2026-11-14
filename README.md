@@ -61,7 +61,7 @@ What needs you comes first.
 
 ### Launch options
 
-Inside a folder, the **New session** line shows how it will start: **model**, **effort** and **permissions**. A click on one, or **⌥↓**, opens them under the list. Starting at once (your shortcut, **⌘↵**, **⌘N**) uses the defaults. The bottom bar always says what the keys do where you are, with your plan use on the right.
+Inside a folder, the **New session** line shows how it will start: **model**, **effort** and **permissions**. **⌥↓**, or a click on a value, opens them under the list. The quick ways to start (your shortcut again, **⌘↵**, **⌘N**) skip the choice and use what is set: Claude's defaults, or what you picked in a folder while the window stayed open. The bottom bar always says what the keys do where you are, with your plan use on the right.
 
 ![Launch options](docs/options.png)
 

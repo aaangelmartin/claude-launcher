@@ -562,7 +562,7 @@ private struct NewFolderLine: View {
             ListLine(model: model, index: index,
                      icon: AnyView(Image(systemName: "folder.badge.plus").font(.system(size: 13)).foregroundStyle(theme.icon)),
                      title: theme.say("Create folder"), folder: path,
-                     trailing: AnyView(KeyHint(keys: ["⌘N"], label: "Create and start", theme: theme)),
+                     trailing: AnyView(Text(theme.say("Create and start")).foregroundStyle(theme.textMuted.opacity(0.8))),
                      theme: theme)
         }
     }
@@ -630,6 +630,7 @@ private struct CommandBar: View {
             default: "Start"
             }
             return [Hint(key: "↵", label: label, help: "Start, go to or resume the highlighted line"),
+                    Hint(key: "⌥↓", label: "Options", help: "Model, effort and permissions for the new session"),
                     Hint(key: "esc", label: "Back", help: "Back to the folders")]
         }
     }
@@ -689,7 +690,7 @@ private struct StepList: View {
                     case .new:
                         ListLine(model: model, index: i, icon: AnyView(Image(systemName: "plus").font(.system(size: 12, weight: .medium)).foregroundStyle(theme.textRow)),
                                  title: theme.say("New session"), folder: nil,
-                                 trailing: AnyView(LaunchSummary(model: model, theme: theme)), theme: theme)
+                                 trailing: AnyView(LaunchSummary(model: model, theme: theme, lit: model.selected == i)), theme: theme)
                         if items.count > 1 {
                             SectionLabel(title: "Sessions", hint: "", theme: theme)
                         }

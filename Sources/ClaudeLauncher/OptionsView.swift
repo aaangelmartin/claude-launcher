@@ -126,6 +126,8 @@ struct OptionsSection: View {
 struct LaunchSummary: View {
     @ObservedObject var model: MainModel
     let theme: AppTheme
+    /// the line is lit: the values come forward; otherwise they stay quiet
+    var lit = true
 
     var body: some View {
         HStack(spacing: 14) {
@@ -134,30 +136,30 @@ struct LaunchSummary: View {
             }
             value(LaunchOptions.effort) {
                 let choice = model.choice(of: LaunchOptions.effort)
-                PaintedText(text: choice.label, paint: choice.paint, font: theme.chip, bold: true)
+                PaintedText(text: choice.label, paint: choice.paint, font: theme.label)
             }
             value(LaunchOptions.permissions) {
                 let choice = model.choice(of: LaunchOptions.permissions)
-                HStack(spacing: 5) {
+                HStack(spacing: 4) {
                     if let symbol = choice.symbol {
-                        PaintedText(text: symbol, paint: choice.paint, font: .system(size: 10))
+                        PaintedText(text: symbol, paint: choice.paint, font: .system(size: 9))
                     }
-                    PaintedText(text: theme.say(choice.label), paint: choice.paint == .plain(CC.inactive) ? .plain(RGB(255, 255, 255)) : choice.paint, font: theme.chip, bold: true)
+                    PaintedText(text: theme.say(choice.label), paint: choice.paint == .plain(CC.inactive) ? .plain(RGB(255, 255, 255)) : choice.paint, font: theme.label)
                 }
             }
-            KeyCap(key: "⌥↓", theme: theme)
-                .help("Change model, effort and permissions")
         }
-        .font(theme.chip)
+        .font(theme.label)
         .lineLimit(1)
         .fixedSize()
+        .opacity(lit ? 1 : 0.6)
+        .animation(.easeOut(duration: 0.12), value: lit)
     }
 
     private func value<Content: View>(_ index: Int, @ViewBuilder _ content: () -> Content) -> some View {
         content()
             .contentShape(Rectangle())
             .onTapGesture { model.openOptions(at: index) }
-            .help("Change it")
+            .help("Change it (⌥↓)")
     }
 }
 
