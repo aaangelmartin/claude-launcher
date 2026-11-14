@@ -41,11 +41,15 @@ struct MainView: View {
                         RunningList(model: model, theme: theme)
                     }
                 case .folders:
-                    if !model.rows.isEmpty {
-                        rowsView
-                    } else if let folder = model.typedFolder {
+                    if !model.rows.isEmpty { rowsView }
+                    if let path = model.newFolder, let index = model.newFolderIndex {
+                        // a name that is no folder yet: make it, for a new project
+                        NewFolderLine(model: model, index: index, path: path, theme: theme)
+                            .padding(.top, model.rows.isEmpty ? 6 : 0)
+                            .padding(.bottom, 6)
+                    } else if model.rows.isEmpty, let folder = model.typedFolder {
                         hint("↵  Open \(folder.isEmpty ? "~" : folder)")
-                    } else {
+                    } else if model.rows.isEmpty {
                         hint("No folder matches.")
                     }
                 case .step:
@@ -536,6 +540,22 @@ private struct ScrollingList<Content: View>: View {
                 withAnimation(.easeOut(duration: 0.12)) { proxy.scrollTo(i) }
             }
         }
+    }
+}
+
+/// a folder that does not exist yet, to start a new project in: enter makes it and starts claude there
+private struct NewFolderLine: View {
+    @ObservedObject var model: MainModel
+    let index: Int
+    let path: String
+    let theme: AppTheme
+
+    var body: some View {
+        ListLine(model: model, index: index,
+                 icon: AnyView(Image(systemName: "folder.badge.plus").font(.system(size: 13)).foregroundStyle(Color(hex: 0xD97757))),
+                 title: theme.say("New folder"), folder: path,
+                 trailing: AnyView(Text(theme.say("Create and start")).foregroundStyle(theme.textMuted.opacity(0.8))),
+                 theme: theme)
     }
 }
 

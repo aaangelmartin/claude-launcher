@@ -324,3 +324,39 @@ import Testing
         #expect(m.selected == nil)
     }
 }
+
+@MainActor
+@Suite struct NewFolderTests {
+    @Test func aNameThatIsNoFolderOffersOneLitWhenNothingMatches() throws {
+        let parent = FileManager.default.temporaryDirectory.appendingPathComponent("claude-launcher-new-\(UUID().uuidString)").path
+        try FileManager.default.createDirectory(atPath: parent, withIntermediateDirectories: true)
+        let m = MainModel()
+        m.newFolderParent = parent
+        m.text = "zz-brand-new-project-\(UUID().uuidString.prefix(6))"
+        #expect(m.newFolder == parent + "/" + m.text)
+        if m.rows.isEmpty { #expect(m.selected == 0) }
+    }
+
+    @Test func enterOnItCreatesTheFolderAndStartsThere() throws {
+        let parent = FileManager.default.temporaryDirectory.appendingPathComponent("claude-launcher-new-\(UUID().uuidString)").path
+        try FileManager.default.createDirectory(atPath: parent, withIntermediateDirectories: true)
+        let m = MainModel()
+        m.newFolderParent = parent
+        var opened: (String, [String])?
+        m.onOpen = { opened = ($0, $1) }
+        m.text = "zz-brand-new-project-\(UUID().uuidString.prefix(6))"
+        let path = try #require(m.newFolder)
+        m.act(on: try #require(m.newFolderIndex))
+        #expect(FolderPath.isDirectory(path))
+        #expect(opened?.0 == FolderPath.display(path))
+        #expect(opened?.1 == [])
+    }
+
+    @Test func anExistingFolderOffersNothing() {
+        let m = MainModel()
+        m.text = "~/"
+        #expect(m.newFolder == nil)
+        m.text = FileManager.default.temporaryDirectory.path
+        #expect(m.newFolder == nil)
+    }
+}

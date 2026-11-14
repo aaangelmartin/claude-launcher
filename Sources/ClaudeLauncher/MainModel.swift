@@ -127,7 +127,48 @@ final class MainModel: ObservableObject {
         // not when a folder's own subfolders are listed ("Developer/"): then it is that folder
         if !rows.isEmpty, !(typed.hasSuffix("/") && FolderPath.isDirectory(FolderPath.resolve(typed))) {
             selected = 0
+        } else if rows.isEmpty, newFolder != nil {
+            // nothing matches: the new folder is what is meant
+            selected = 0
         }
+    }
+
+    // MARK: a new folder
+
+    /// where a bare name becomes a folder: ~/Developer when there is one, else the home folder
+    var newFolderParent: String = {
+        let developer = FolderPath.home + "/Developer"
+        return FolderPath.isDirectory(developer) ? developer : FolderPath.home
+    }()
+
+    /// the folder that would be created for what is typed, absolute, when it does not exist yet: a
+    /// bare name under the parent, a path as typed. nil when it exists, or is no usable name
+    var newFolder: String? {
+        let typed = text.trimmingCharacters(in: .whitespaces)
+        guard !typed.isEmpty, !typed.hasSuffix("/"), !typed.contains(":") else { return nil }
+        let path: String
+        if typed.contains("/") || typed.hasPrefix("~") {
+            path = ProjectIndex.trimmed(FolderPath.resolve(typed))
+        } else {
+            guard typed != ".", typed != ".." else { return nil }
+            path = newFolderParent + "/" + typed
+        }
+        return FileManager.default.fileExists(atPath: path) ? nil : path
+    }
+
+    /// the new folder's line comes after the folders found
+    var newFolderIndex: Int? { newFolder == nil ? nil : rows.count }
+
+    /// make the new folder and start claude in it: a new project has no sessions to resume, so no step
+    func createAndStart() {
+        guard let path = newFolder else { NSSound.beep(); return }
+        do {
+            try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+        } catch {
+            notice = .failed("could not create \(FolderPath.display(path)): \(error.localizedDescription)")
+            return
+        }
+        onOpen(FolderPath.display(path), LaunchOptions.args(for: picks))
     }
 
     // MARK: what is listed
@@ -136,7 +177,7 @@ final class MainModel: ObservableObject {
     var count: Int {
         switch moment {
         case .running: live.count
-        case .folders: rows.count
+        case .folders: rows.count + (newFolder == nil ? 0 : 1)
         case .step: stepItems.count
         }
     }
@@ -177,7 +218,7 @@ final class MainModel: ObservableObject {
         case .running:
             if live.indices.contains(index) { onFocus(live[index]) }
         case .folders:
-            if rows.indices.contains(index) { openStep(rows[index]) }
+            if rows.indices.contains(index) { openStep(rows[index]) } else if index == newFolderIndex { createAndStart() }
         case .step:
             let items = stepItems
             guard let folder = stepFolder, items.indices.contains(index) else { return }
@@ -198,7 +239,8 @@ final class MainModel: ObservableObject {
             let folder = selected.flatMap { live.indices.contains($0) ? FolderPath.display(live[$0].cwd) : nil } ?? ""
             onOpen(folder, LaunchOptions.args(for: picks))
         case .folders:
-            // the lit folder, or what is typed when it is one, else the home folder
+            // the new folder when it is lit; else the lit folder, or what is typed when it is one, or home
+            if let selected, selected == newFolderIndex { createAndStart(); return }
             onOpen(folderTarget ?? "", LaunchOptions.args(for: picks))
         }
     }

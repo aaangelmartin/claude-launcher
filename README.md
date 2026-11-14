@@ -43,6 +43,8 @@ Each moment has one purpose:
 
 ![A folder](docs/folder.png)
 
+**Starting a new project?** Type a name that is no folder yet, like `my-next-app`, and the last line offers **New folder** where it would go: a bare name under `~/Developer` (or your home folder without one), a path exactly as typed. When nothing else matches it is already highlighted. **↵** or your shortcut creates it and starts Claude in it.
+
 **Press your shortcut again** to start a new session at once: in the folder you are in, the highlighted one, or your home folder. Type `laaabs`, press ⌥C, and Claude starts there.
 
 ### Session states
@@ -79,7 +81,7 @@ On the right of the bottom bar: your five-hour session and weekly use, as `/usag
 |---|---|
 | **⌥C** | bring up Claude Launcher; again, start a new session at once |
 | **↑ ↓** | move through the list |
-| **↵** | go to a running session, open a folder, start or resume a session |
+| **↵** | go to a running session, open a folder, create a new one, start or resume a session |
 | **⌘↵** | start a new session at once |
 | **Tab** | highlight the first line; on a folder, complete its path |
 | **⌥↓ ⌥↑** | open and fold the launch options |
