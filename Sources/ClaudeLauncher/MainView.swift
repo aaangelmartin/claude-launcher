@@ -366,10 +366,6 @@ private struct FolderRow: View {
                 .layoutPriority(1)
             Spacer(minLength: 12)
             if let info { meta(info) }
-            if isSelected {
-                KeyHint(keys: ["↵"], label: "Open", theme: theme)
-                    .padding(.leading, 14)
-            }
         }
         .padding(.trailing, 12)
         .frame(height: MainView.rowHeight)
@@ -492,8 +488,6 @@ private struct ListLine: View {
     let title: String
     let folder: String?
     let trailing: AnyView
-    /// what enter does on this line, shown on it while it is lit ("Open", "Resume")
-    var action: String? = nil
     let theme: AppTheme
 
     var body: some View {
@@ -518,11 +512,6 @@ private struct ListLine: View {
             }
             Spacer(minLength: 12)
             trailing.font(theme.label).lineLimit(1)
-            if on, let action {
-                KeyHint(keys: ["↵"], label: action, theme: theme)
-                    .padding(.leading, 14)
-                    .transition(.opacity)
-            }
         }
         .padding(.trailing, 12)
         .frame(height: MainView.rowHeight)
@@ -573,7 +562,7 @@ private struct NewFolderLine: View {
             ListLine(model: model, index: index,
                      icon: AnyView(Image(systemName: "folder.badge.plus").font(.system(size: 13)).foregroundStyle(theme.icon)),
                      title: theme.say("Create folder"), folder: path,
-                     trailing: AnyView(KeyHint(keys: model.selected == index ? ["↵", "⌘N"] : ["⌘N"], label: "Create and start", theme: theme)),
+                     trailing: AnyView(KeyHint(keys: ["⌘N"], label: "Create and start", theme: theme)),
                      theme: theme)
         }
     }
@@ -607,20 +596,40 @@ private struct CommandBar: View {
 
     private struct Hint { let key: String; let label: String; let help: String }
 
-    /// the keys that act beyond the lit line (enter shows on the line itself)
     private var hints: [Hint] {
         let lit = model.selected
         let shortcut = OptionsSection.shortcutText
         switch model.moment {
         case .running:
-            return [Hint(key: "⌘↵", label: "New session", help: lit == nil
+            var list: [Hint] = []
+            if !model.live.isEmpty {
+                list.append(lit == nil
+                    ? Hint(key: "↓", label: "Choose", help: "Highlight a running session")
+                    : Hint(key: "↵", label: "Open", help: "Go to the session's window"))
+            }
+            list.append(Hint(key: "⌘↵", label: "New session", help: lit == nil
                 ? "Start a new session in your home folder (or press \(shortcut))"
-                : "Start a new session in that session's folder (or press \(shortcut))")]
+                : "Start a new session in that session's folder (or press \(shortcut))"))
+            return list
         case .folders:
-            // ⌘N shows on the Create folder line itself
-            return [Hint(key: "⌘↵", label: "New session", help: "Start a new session in the lit folder at once (or press \(shortcut))")]
+            let creating = lit != nil && lit == model.newFolderIndex
+            var list = [creating
+                ? Hint(key: "↵", label: "Create", help: "Create the folder and start Claude in it")
+                : Hint(key: "↵", label: "Open", help: "Open the folder to start or resume a session")]
+            if model.newFolder != nil {
+                list.append(Hint(key: "⌘N", label: "New folder", help: "Create the folder typed and start Claude in it"))
+            } else {
+                list.append(Hint(key: "⌘↵", label: "New session", help: "Start a new session there at once (or press \(shortcut))"))
+            }
+            return list
         case .step:
-            return [Hint(key: "⌘↵", label: "New session", help: "Start a new session in this folder at once"),
+            let items = model.stepItems
+            let label: String = switch lit.flatMap({ items.indices.contains($0) ? items[$0] : nil }) {
+            case .running: "Go to"
+            case .past: "Resume"
+            default: "Start"
+            }
+            return [Hint(key: "↵", label: label, help: "Start, go to or resume the highlighted line"),
                     Hint(key: "esc", label: "Back", help: "Back to the folders")]
         }
     }
@@ -641,7 +650,7 @@ private struct RunningList: View {
                              Text(StateWords.label(s.state)).foregroundStyle(StateWords.colour(s.state, theme))
                              Text(Ago.long(s.since)).monospacedDigit().foregroundStyle(theme.textMuted.opacity(0.8))
                                  .frame(width: 58, alignment: .trailing)
-                         }), action: "Open", theme: theme)
+                         }), theme: theme)
             }
         }
     }
@@ -680,17 +689,17 @@ private struct StepList: View {
                     case .new:
                         ListLine(model: model, index: i, icon: AnyView(Image(systemName: "plus").font(.system(size: 12, weight: .medium)).foregroundStyle(theme.textRow)),
                                  title: theme.say("New session"), folder: nil,
-                                 trailing: AnyView(LaunchSummary(model: model, theme: theme)), action: "Start", theme: theme)
+                                 trailing: AnyView(LaunchSummary(model: model, theme: theme)), theme: theme)
                         if items.count > 1 {
                             SectionLabel(title: "Sessions", hint: "", theme: theme)
                         }
                     case let .running(s):
                         ListLine(model: model, index: i, icon: AnyView(StateDot(state: s.state)), title: s.name, folder: nil,
-                                 trailing: AnyView(Text(StateWords.label(s.state)).foregroundStyle(StateWords.colour(s.state, theme))), action: "Go to", theme: theme)
+                                 trailing: AnyView(Text(StateWords.label(s.state)).foregroundStyle(StateWords.colour(s.state, theme))), theme: theme)
                     case let .past(s):
                         ListLine(model: model, index: i, icon: AnyView(Image(systemName: "clock.arrow.circlepath").font(.system(size: 11.5)).foregroundStyle(theme.icon)),
                                  title: s.title, folder: nil,
-                                 trailing: AnyView(Text(Ago.long(s.updated)).monospacedDigit().foregroundStyle(theme.textMuted.opacity(0.8))), action: "Resume", theme: theme)
+                                 trailing: AnyView(Text(Ago.long(s.updated)).monospacedDigit().foregroundStyle(theme.textMuted.opacity(0.8))), theme: theme)
                     }
                 }
             }

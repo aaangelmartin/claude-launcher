@@ -61,7 +61,7 @@ What needs you comes first.
 
 ### Launch options
 
-Inside a folder, the **New session** line shows how it will start: **model**, **effort** and **permissions**. A click on one, or **⌥↓**, opens them under the list. Starting at once (your shortcut, **⌘↵**, **⌘N**) uses the defaults. The highlighted line shows what **↵** does on it (Open, Start, Resume, Create), and the bottom bar the keys that act beyond it, with your plan use on the right.
+Inside a folder, the **New session** line shows how it will start: **model**, **effort** and **permissions**. A click on one, or **⌥↓**, opens them under the list. Starting at once (your shortcut, **⌘↵**, **⌘N**) uses the defaults. The bottom bar always says what the keys do where you are, with your plan use on the right.
 
 ![Launch options](docs/options.png)
 
