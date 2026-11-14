@@ -20,8 +20,19 @@ enum Setup {
 
     // MARK: claude code
 
+    /// where claude is installed, symlinks resolved. the app starts without a shell PATH, so the usual
+    /// places are tried in turn.
+    static func binary() -> String? {
+        let home = NSHomeDirectory()
+        let candidates = ["\(home)/.local/bin/claude", "/opt/homebrew/bin/claude", "/usr/local/bin/claude", "\(home)/.claude/local/claude"]
+        for path in candidates where FileManager.default.fileExists(atPath: path) {
+            return URL(fileURLWithPath: path).resolvingSymlinksInPath().path
+        }
+        return nil
+    }
+
     static func claudeCode() -> State {
-        guard let binary = ModelVersions.binary() else {
+        guard let binary = binary() else {
             return .missing("Install Claude Code, then check again")
         }
         // the binary's folder is named after its version: …/versions/2.1.323

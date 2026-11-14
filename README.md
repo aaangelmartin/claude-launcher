@@ -45,7 +45,9 @@ Each moment has one purpose:
 
 **Starting a new project?** Type a name that is no folder yet, like `my-next-app`, and the last line offers **Create folder**, showing where it would go: a bare name under `~/Developer` (or your home folder without one), a path exactly as typed. It sits apart, under **New project**, and is already highlighted when nothing else matches. **↵**, your shortcut or **⌘N** (from anywhere while typing) creates it and starts Claude in it.
 
-**Press your shortcut again** to start a new session at once: in the folder you are in, the highlighted one, or your home folder. Type `laaabs`, press ⌥C, and Claude starts there.
+**Press your shortcut again** (or **⌘↵**) to start a new session at once: in the folder you are in, the highlighted one, or your home folder. Type `laaabs`, press ⌥C, and Claude starts there.
+
+The bottom bar always says what the keys do where you are, and always how to start a new session.
 
 ### Session states
 
@@ -59,21 +61,13 @@ Running sessions show the states Claude's Code view filters by:
 
 What needs you comes first.
 
-### Launch options
+### Model, effort and permissions
 
-Inside a folder, the **New session** line shows how it will start: **model**, **effort** and **permissions**. **⌥↓**, or a click on a value, opens them under the list. The quick ways to start (your shortcut again, **⌘↵**, **⌘N**) skip the choice and use what is set: Claude's defaults, or what you picked in a folder while the window stayed open. The bottom bar always says what the keys do where you are, with your plan use on the right.
-
-![Launch options](docs/options.png)
-
-- **Model**: Fable, Opus, Sonnet, Haiku, with the numbers read from your installed `claude`, so they update with it.
-- **Effort**: low to max. The level each model starts with is marked *default*.
-- **Permissions**: Manual, Accept edits, Plan, Auto, Bypass. The mode your settings choose is marked *default*.
-
-They start from the defaults every time, and picking a default adds no flag, so Claude keeps following its own settings.
+Claude Launcher starts Claude with its own defaults and leaves these to Claude Code, where they already live: `/model`, `/effort` and **⇧⇥** for the permission mode, inside the session.
 
 ### Plan use
 
-On the right of the bottom bar, everywhere: your five-hour session and weekly use, as `/usage` shows them, with the time left until each resets. They turn yellow from 80 % and red from 95 %.
+On the right of the bottom bar: your five-hour session and weekly use, as `/usage` shows them, with the time left until each resets. They turn yellow from 80 % and red from 95 %.
 
 ## Keys
 
@@ -85,7 +79,6 @@ On the right of the bottom bar, everywhere: your five-hour session and weekly us
 | **⌘↵** | start a new session at once |
 | **⌘N** | create the folder typed and start Claude in it |
 | **Tab** | highlight the first line; on a folder, complete its path |
-| **⌥↓ ⌥↑** | in a folder, open and fold the launch options |
 | **esc** | back out one step: the folder, what is typed, then the window |
 | **⌘,** | the setup again (shortcut, checks) |
 | **⌘Q** | quit |

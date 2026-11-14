@@ -68,54 +68,13 @@ import Testing
 
 
 
-@Suite struct LaunchOptionsTests {
-    @Test func defaultsAddNothing() {
-        #expect(LaunchOptions.args(for: [0, 0, 0]).isEmpty)
-    }
 
-    @Test func picksBecomeFlagsInOrder() {
-        // opus, high effort, plan, continue
-        #expect(LaunchOptions.args(for: [2, 3, 3]) == ["--model", "opus", "--effort", "high", "--permission-mode", "plan"])
-        // max effort, bypass permissions
-        #expect(LaunchOptions.args(for: [0, 5, 5]) == ["--effort", "max", "--permission-mode", "bypassPermissions"])
-    }
-
-
-
-}
-
-@Suite struct ModelVersionsTests {
-    @Test func keepsTheNewestOfEachFamily() {
-        let text = "x claude-opus-4-8 y claude-opus-5-5 claude-opus-5 claude-sonnet-4-5-20250929 claude-sonnet-5-5 claude-haiku-4-5-20251001 claude-fable-5-1 claude-fable-5-2 claude-fable-5 claude-3-5-sonnet"
-        let v = ModelVersions.newest(in: Data(text.utf8))
-        #expect(v.filter { !$0.key.hasPrefix("effort.") } == ["opus": "5.5", "sonnet": "5.5", "haiku": "4.5", "fable": "5.2"])
-    }
-
-    @Test func eachModelGetsTheEffortItsTableGives() {
-        let text = #"{id:"claude-opus-5",x:1,default_effort:"high"},{id:"claude-opus-5-5",caps:["a"],default_effort:"medium"},{id:"claude-opus-5-5",default_effort:"medium"}"#
-        let v = ModelVersions.newest(in: Data(text.utf8))
-        #expect(v["opus"] == "5.5")
-        #expect(v["effort.opus"] == "medium")
-    }
-
-    @Test func aWholeNumberHasNoDot() {
-        #expect(ModelVersions.newest(in: Data("claude-opus-6 claude-opus-5-5".utf8)) == ["opus": "6"])
-    }
-
-    @Test func aDateIsNotAMinor() {
-        #expect(ModelVersions.newest(in: Data("claude-opus-4-20250514".utf8)) == ["opus": "4"])
-    }
-}
 
 @Suite struct InstalledClaudeTests {
     /// on a mac with claude installed, its own binary names a number for every family
-    @Test func installedClaudeNamesEveryFamily() throws {
-        guard let binary = ModelVersions.binary() else { return }
-        let start = Date()
-        let found = ModelVersions.scan(binary)
-        print("model versions:", found, "in", Date().timeIntervalSince(start), "s")
-        #expect(Set(found.keys.filter { !$0.hasPrefix("effort.") }) == Set(ModelVersions.families))
-        #expect(found["effort.opus"] != nil)
+    @Test func installedClaudeIsFound() throws {
+        guard Setup.binary() != nil else { return }
+        if case .ok = Setup.claudeCode() {} else { Issue.record("claude is installed but not reported as ok") }
     }
 }
 
@@ -142,34 +101,6 @@ import Testing
 }
 
 
-@MainActor
-@Suite struct MarkedDefaultTests {
-    @Test func openingStartsFromTheDefaults() {
-        let m = MainModel()
-        m.pick(3, of: LaunchOptions.effort)
-        m.pick(2, of: LaunchOptions.permissions)
-        m.reset()
-        #expect(m.picks == [0, 0, 0])
-    }
-
-    @Test func pickingTheDefaultLevelAddsNoFlag() {
-        let m = MainModel()
-        m.pick(0, of: LaunchOptions.effort)
-        let def = m.defaultValue(of: LaunchOptions.effort)
-        #expect(m.shown(LaunchOptions.effort) == def)
-        m.step(LaunchOptions.effort, by: 1)
-        #expect(m.picks[LaunchOptions.effort] == def + 1)
-        m.step(LaunchOptions.effort, by: -1)
-        #expect(m.picks[LaunchOptions.effort] == 0)
-    }
-
-    @Test func stepsNeverReachTheHiddenDefault() {
-        let m = MainModel()
-        m.pick(1, of: LaunchOptions.effort)
-        m.step(LaunchOptions.effort, by: -1)
-        #expect(m.shown(LaunchOptions.effort) == 1)
-    }
-}
 
 @Suite struct ProjectsTests {
     @Test func fuzzyFindsLettersInOrderAndPrefersTheName() {

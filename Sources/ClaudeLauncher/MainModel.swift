@@ -19,7 +19,6 @@ final class MainModel: ObservableObject {
     enum Key: Equatable {
         case up, down, left, right, enter, tab, escape, space
         case jumpDown, jumpUp // ⌘↓ ⌘↑
-        case optionsDown, optionsUp // ⌥↓ ⌥↑: open and fold the options
         case openNew // ⌘↵: a new session at once
         case createFolder // ⌘N: make the folder typed and start claude in it
     }
@@ -44,20 +43,9 @@ final class MainModel: ObservableObject {
     /// changes with every new set of rows, so the list view starts fresh (top, same margins)
     @Published private(set) var listID = UUID()
 
-    /// the picked value of each launch option. every time the window opens they start again from
-    /// claude's defaults, so a one-off choice never carries over to the next launch
-    @Published private(set) var picks: [Int] = LaunchOptions.all.map { _ in 0 }
     /// the plan's session and weekly use, when claude code's sign-in can be read
     @Published var usage: Usage?
     private var usageFetchedAt: Date?
-    /// the option the arrows are on (the options are open while it is set), nil on the field and list
-    @Published private(set) var optionRow: Int?
-    /// which way the last change went (-1 back, 1 forward), so a carousel slides the right way
-    private(set) var lastDelta = 1
-    var optionsOpen: Bool { optionRow != nil }
-    /// the newest number of each model family, as the installed claude knows them
-    @Published private(set) var modelVersions: [String: String] = ModelVersions.cached(for: ModelVersions.binary()) ?? [:]
-    private var versionsBinary: String?
 
     /// every folder worth offering, with its sessions and branch (built in the background)
     @Published var projects: [String: ProjectInfo] = [:]
@@ -71,7 +59,7 @@ final class MainModel: ObservableObject {
     /// whether the field's caret is at the end of what is typed (→ there opens the lit folder)
     var caretAtEnd: () -> Bool = { true }
 
-    init() { refreshModelVersions() }
+    init() {}
 
     /// asks the panel to open a folder (raw, as typed, with the flags) or to close
     var onOpen: (String, [String]) -> Void = { _, _ in }
@@ -92,12 +80,9 @@ final class MainModel: ObservableObject {
 
     func reset() {
         refreshLive()
-        refreshModelVersions()
         refreshProjects()
         refreshUsage()
-        picks = LaunchOptions.all.map { _ in 0 }
         notice = nil
-        optionRow = nil
         stepFolder = nil
         text = ""
         refreshRows()
@@ -105,7 +90,6 @@ final class MainModel: ObservableObject {
 
     private func textChanged() {
         // typing always happens in the field: back to the folders, the arrows on the field
-        optionRow = nil
         stepFolder = nil
         refreshRows()
     }
@@ -169,7 +153,7 @@ final class MainModel: ObservableObject {
             notice = .failed("could not create \(FolderPath.display(path)): \(error.localizedDescription)")
             return
         }
-        onOpen(FolderPath.display(path), LaunchOptions.args(for: picks))
+        onOpen(FolderPath.display(path), [])
     }
 
     // MARK: what is listed
@@ -201,7 +185,6 @@ final class MainModel: ObservableObject {
 
     /// open a folder's step, "new session" lit
     func openStep(_ folder: String) {
-        optionRow = nil
         stepFolder = folder
         selectedByPointer = false
         selected = 0
@@ -209,7 +192,6 @@ final class MainModel: ObservableObject {
 
     func closeStep() {
         stepFolder = nil
-        optionRow = nil
         refreshRows()
     }
 
@@ -224,9 +206,9 @@ final class MainModel: ObservableObject {
             let items = stepItems
             guard let folder = stepFolder, items.indices.contains(index) else { return }
             switch items[index] {
-            case .new: onOpen(folder, LaunchOptions.args(for: picks))
+            case .new: onOpen(folder, [])
             case let .running(s): onFocus(s)
-            case let .past(s): onOpen(folder, LaunchOptions.args(for: picks) + ["--resume", s.id])
+            case let .past(s): onOpen(folder, ["--resume", s.id])
             }
         }
     }
@@ -235,14 +217,14 @@ final class MainModel: ObservableObject {
     func openNew() {
         switch moment {
         case .step:
-            if let folder = stepFolder { onOpen(folder, LaunchOptions.args(for: picks)) }
+            if let folder = stepFolder { onOpen(folder, []) }
         case .running:
             let folder = selected.flatMap { live.indices.contains($0) ? FolderPath.display(live[$0].cwd) : nil } ?? ""
-            onOpen(folder, LaunchOptions.args(for: picks))
+            onOpen(folder, [])
         case .folders:
             // the new folder when it is lit; else the lit folder, or what is typed when it is one, or home
             if let selected, selected == newFolderIndex { createAndStart(); return }
-            onOpen(folderTarget ?? "", LaunchOptions.args(for: picks))
+            onOpen(folderTarget ?? "", [])
         }
     }
 
@@ -276,7 +258,7 @@ final class MainModel: ObservableObject {
             let built = ProjectIndex.build(recents: recents)
             await MainActor.run {
                 self.projects = built
-                if self.optionRow == nil, self.selected == nil, self.stepFolder == nil { self.refreshRows() }
+                if self.selected == nil, self.stepFolder == nil { self.refreshRows() }
             }
         }
     }
@@ -313,27 +295,6 @@ final class MainModel: ObservableObject {
         selected = index
     }
 
-    // MARK: launch options
-
-    /// reads the model numbers again when claude has been updated since they were last read; the
-    /// binary is large, so that happens off the main thread and the labels follow when it is done
-    func refreshModelVersions() {
-        guard let binary = ModelVersions.binary(), binary != versionsBinary else { return }
-        versionsBinary = binary
-        if let cached = ModelVersions.cached(for: binary) {
-            if cached != modelVersions { modelVersions = cached }
-            return
-        }
-        Task.detached(priority: .utility) {
-            let found = ModelVersions.scan(binary)
-            guard !found.isEmpty else { return }
-            await MainActor.run {
-                ModelVersions.save(found, for: binary)
-                self.modelVersions = found
-            }
-        }
-    }
-
     /// asks for the plan's use again, at most once a minute
     func refreshUsage() {
         // only the installed app reads the keychain (tests and previews would make macOS ask)
@@ -346,62 +307,6 @@ final class MainModel: ObservableObject {
         }
     }
 
-    /// a value as shown: models with their number ("Opus 5.5"), the rest as they are
-    func display(_ choice: Choice, of option: Int) -> String {
-        guard option == LaunchOptions.model, let alias = choice.args.last,
-              let number = modelVersions[alias] else { return choice.label }
-        return choice.label + " " + number
-    }
-
-    /// the value an option stands at, as shown: for an option whose default is marked rather than
-    /// offered, the value its default amounts to
-    func shown(_ option: Int) -> Int {
-        let pick = picks[option]
-        return pick == 0 && LaunchOptions.all[option].defaultIsMarked ? defaultValue(of: option) : pick
-    }
-
-    func choice(of option: Int) -> Choice { LaunchOptions.all[option].choices[shown(option)] }
-
-    /// the value claude starts with when this option adds no flag: the settings' model (opus when they
-    /// name none), the effort that model ships with, the settings' permission mode (manual when none)
-    func defaultValue(of option: Int) -> Int {
-        let o = LaunchOptions.all[option]
-        guard o.defaultIsMarked else { return 0 }
-        func index(_ label: String?) -> Int? { label.flatMap { l in o.choices.firstIndex { $0.label == l } } }
-        switch option {
-        case LaunchOptions.model:
-            return index(LaunchOptions.settingsDefault(of: option)) ?? index("Opus") ?? 1
-        case LaunchOptions.effort:
-            let family = choice(of: LaunchOptions.model).args.last ?? "opus"
-            return index(modelVersions["effort." + family]) ?? index("medium") ?? 1
-        default:
-            return index(LaunchOptions.settingsDefault(of: option)) ?? 1
-        }
-    }
-
-    /// pick a value as shown: picking the default value stores "no flag", so it keeps following claude
-    func pickShown(_ value: Int, of option: Int) {
-        let o = LaunchOptions.all[option]
-        pick(o.defaultIsMarked && value == defaultValue(of: option) ? 0 : value, of: option)
-    }
-
-    /// ← → on an option: the value before or after, stopping at the ends
-    func step(_ option: Int, by delta: Int) {
-        let o = LaunchOptions.all[option]
-        let first = o.defaultIsMarked ? 1 : 0
-        pickShown(min(max(shown(option) + delta, first), o.choices.count - 1), of: option)
-    }
-
-    func pick(_ value: Int, of option: Int) {
-        guard LaunchOptions.all[option].choices.indices.contains(value), picks[option] != value else { return }
-        lastDelta = value > shown(option) ? 1 : -1
-        picks[option] = value
-    }
-
-    /// open the options on one of them (a click on the summary line, ⌘↓)
-    func openOptions(at row: Int = 0) { optionRow = row }
-    func closeOptions() { optionRow = nil }
-
     // MARK: keys
 
     /// one key, wherever the arrows are. false: not ours, the field gets it (←→ move the caret there,
@@ -411,10 +316,6 @@ final class MainModel: ObservableObject {
             if newFolder != nil { createAndStart() } else { NSSound.beep() }
             return true
         }
-        // the launch options belong to a folder's new session
-        if key == .optionsDown { if moment == .step { optionRow = optionRow ?? 0 }; return true }
-        if key == .optionsUp { optionRow = nil; return true }
-        if let optionRow { return handleOptions(key, optionRow) }
         switch key {
         case .down:
             // the last line is the end
@@ -448,25 +349,7 @@ final class MainModel: ObservableObject {
             guard moment == .step else { return false }
             closeStep()
         case .space: return false // spaces belong to the field
-        case .optionsDown, .optionsUp, .createFolder: break
-        }
-        return true
-    }
-
-    /// the options are open: ↑ ↓ go from one to the next, ← → change the value, esc folds them away
-    private func handleOptions(_ key: Key, _ row: Int) -> Bool {
-        let last = LaunchOptions.all.count - 1
-        switch key {
-        case .up: optionRow = row == 0 ? nil : row - 1
-        case .down: optionRow = min(last, row + 1)
-        case .tab: optionRow = row == last ? 0 : row + 1
-        case .jumpUp, .escape: optionRow = nil
-        case .jumpDown: optionRow = last
-        case .left: step(row, by: -1)
-        case .right: step(row, by: 1)
-        case .enter: if selected != nil { submit() } else { openNew() }
-        case .openNew: openNew()
-        case .space, .optionsDown, .optionsUp, .createFolder: break
+        case .createFolder: break
         }
         return true
     }

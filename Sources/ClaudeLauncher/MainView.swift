@@ -62,11 +62,6 @@ struct MainView: View {
                         : .opacity)
 
             // how a session starts, where one does
-            // in a folder, the launch options open under the list (⌥↓, or a click on a value on the
-            // New session line); folded they take no room
-            if model.moment == .step {
-                OptionsSection(model: model, theme: theme)
-            }
             // the keys that act here, and the plan's use, everywhere
             divider
             CommandBar(model: model, theme: theme)
@@ -562,7 +557,7 @@ private struct NewFolderLine: View {
             ListLine(model: model, index: index,
                      icon: AnyView(Image(systemName: "folder.badge.plus").font(.system(size: 13)).foregroundStyle(theme.icon)),
                      title: theme.say("Create folder"), folder: path,
-                     trailing: AnyView(Text(theme.say("Create and start")).foregroundStyle(theme.textMuted.opacity(0.8))),
+                     trailing: AnyView(KeyHint(keys: ["⌘N"], label: "Create and start", theme: theme)),
                      theme: theme)
         }
     }
@@ -596,42 +591,35 @@ private struct CommandBar: View {
 
     private struct Hint { let key: String; let label: String; let help: String }
 
+    /// what the keys do here, always with a way to a new session
     private var hints: [Hint] {
         let lit = model.selected
-        let shortcut = OptionsSection.shortcutText
+        let shortcut = Shortcut.text
+        let newSession = Hint(key: "⌘↵", label: "New session", help: "Start a new session at once (or press \(shortcut))")
         switch model.moment {
         case .running:
-            var list: [Hint] = []
-            if !model.live.isEmpty {
-                list.append(lit == nil
-                    ? Hint(key: "↓", label: "Choose", help: "Highlight a running session")
-                    : Hint(key: "↵", label: "Open", help: "Go to the session's window"))
-            }
-            list.append(Hint(key: "⌘↵", label: "New session", help: lit == nil
-                ? "Start a new session in your home folder (or press \(shortcut))"
-                : "Start a new session in that session's folder (or press \(shortcut))"))
-            return list
+            if model.live.isEmpty { return [newSession] }
+            return [lit == nil
+                        ? Hint(key: "↓", label: "Choose", help: "Highlight a running session")
+                        : Hint(key: "↵", label: "Open", help: "Go to the session's window"),
+                    newSession]
         case .folders:
             let creating = lit != nil && lit == model.newFolderIndex
-            var list = [creating
-                ? Hint(key: "↵", label: "Create", help: "Create the folder and start Claude in it")
-                : Hint(key: "↵", label: "Open", help: "Open the folder to start or resume a session")]
-            if model.newFolder != nil {
-                list.append(Hint(key: "⌘N", label: "New folder", help: "Create the folder typed and start Claude in it"))
-            } else {
-                list.append(Hint(key: "⌘↵", label: "New session", help: "Start a new session there at once (or press \(shortcut))"))
-            }
-            return list
+            return [creating
+                        ? Hint(key: "↵", label: "Create", help: "Create the folder and start Claude in it")
+                        : Hint(key: "↵", label: "Open", help: "Open the folder to start or resume a session"),
+                    newSession]
         case .step:
             let items = model.stepItems
-            let label: String = switch lit.flatMap({ items.indices.contains($0) ? items[$0] : nil }) {
-            case .running: "Go to"
-            case .past: "Resume"
-            default: "Start"
+            switch lit.flatMap({ items.indices.contains($0) ? items[$0] : nil }) {
+            case .running:
+                return [Hint(key: "↵", label: "Go to", help: "Go to the session's window"), newSession]
+            case .past:
+                return [Hint(key: "↵", label: "Resume", help: "Resume the session in this folder"), newSession]
+            default:
+                return [Hint(key: "↵", label: "New session", help: "Start a new session in this folder"),
+                        Hint(key: "esc", label: "Back", help: "Back to the folders")]
             }
-            return [Hint(key: "↵", label: label, help: "Start, go to or resume the highlighted line"),
-                    Hint(key: "⌥↓", label: "Options", help: "Model, effort and permissions for the new session"),
-                    Hint(key: "esc", label: "Back", help: "Back to the folders")]
         }
     }
 }
@@ -690,7 +678,7 @@ private struct StepList: View {
                     case .new:
                         ListLine(model: model, index: i, icon: AnyView(Image(systemName: "plus").font(.system(size: 12, weight: .medium)).foregroundStyle(theme.textRow)),
                                  title: theme.say("New session"), folder: nil,
-                                 trailing: AnyView(LaunchSummary(model: model, theme: theme, lit: model.selected == i)), theme: theme)
+                                 trailing: AnyView(EmptyView()), theme: theme)
                         if items.count > 1 {
                             SectionLabel(title: "Sessions", hint: "", theme: theme)
                         }

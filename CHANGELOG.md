@@ -10,8 +10,8 @@ All notable changes to Claude Launcher. The format follows [Keep a Changelog](ht
 - Every Claude Code session running on this Mac, with its state (Needs input, Working, Completed); ↵ brings its Terminal tab forward.
 - Folder search, fuzzy or by path, with each folder's git branch, last use and session count; the best match is lit, so the shortcut again starts a session there.
 - A folder's step: a new session, its running sessions and its past ones to resume.
+- A bottom bar that always says what the keys do, and how to start a new session.
 - New folders for new projects: a name that is no folder yet can be created, and Claude starts in it.
-- Launch options: model (numbers read from the installed `claude`), effort (each model's default marked), permission mode.
 - The plan's five-hour and weekly use, with the time left until each resets.
 - A first-run setup: what it does, a check of Claude Code, Terminal permission, sign-in, the Claude app and start at login, and a shortcut recorder.
 

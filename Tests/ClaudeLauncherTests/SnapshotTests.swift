@@ -50,12 +50,6 @@ import Testing
 
     @Test func empty() { shot("1-empty") { m in m.reset(); m.live = []; m.usage = Usage(session: .init(percent: 6, resetsAt: Date().addingTimeInterval(8040)), week: .init(percent: 84, resetsAt: Date().addingTimeInterval(36960))) } }
     @Test func typing() { shot("2-typing") { m in m.projects = Self.sample(); m.text = "Dev" } }
-    @Test func optionsFolded() { shot("3-folded") { m in m.reset(); m.text = "Developer"; _ = m.handle(.enter); m.usage = Usage(session: .init(percent: 6, resetsAt: Date().addingTimeInterval(8040)), week: .init(percent: 84, resetsAt: Date().addingTimeInterval(36960))); m.pick(2, of: 0); m.pick(4, of: 1); m.pick(3, of: 2) } }
-    @Test func optionsOpen() { shot("4-open") { m in m.reset(); m.pick(2, of: 0); m.pick(3, of: 1); m.pick(5, of: 2); m.text = "Developer"; _ = m.handle(.enter); _ = m.handle(.optionsDown); _ = m.handle(.down) } }
-    @Test func optionsMax() { shot("5-max") { m in m.reset(); m.pick(5, of: 1); m.pick(2, of: 2); m.text = "Developer"; _ = m.handle(.enter); _ = m.handle(.optionsDown); _ = m.handle(.down) } }
-    @Test func optionsPermissions() { shot("7-permissions") { m in m.reset(); m.pick(1, of: 0); m.pick(4, of: 2); m.text = "Developer"; _ = m.handle(.enter); _ = m.handle(.optionsDown); _ = m.handle(.down); _ = m.handle(.down) } }
-    @Test func optionsBypass() { shot("8-bypass") { m in m.reset(); m.pick(0, of: 1); m.pick(5, of: 2); m.text = "Developer"; _ = m.handle(.enter); _ = m.handle(.optionsDown); _ = m.handle(.down); _ = m.handle(.down) } }
-    @Test func optionsAllDefaultOpen() { shot("9-defaults-open") { m in m.reset(); for i in 0..<3 { m.pick(0, of: i) }; m.text = "Developer"; _ = m.handle(.enter); _ = m.handle(.optionsDown) } }
     private static func sample() -> [String: ProjectInfo] {
         let home = FolderPath.home
         let s = (0..<4).map { SessionInfo(id: "s\($0)", title: ["Add plan usage to the launcher", "Fuzzy project search like T3 Code", "Fix the effort slider", "Translate everything to English"][$0], updated: Date().addingTimeInterval(-Double($0 + 1) * 5000)) }
@@ -86,5 +80,4 @@ import Testing
     @Test func newMode() { shot("11-new") { m in m.reset(); m.projects = Self.sample(); m.text = "Developer"; _ = m.handle(.enter) } }
     @Test func newFolder() { shot("15-new-folder") { m in m.reset(); m.projects = Self.sample(); m.live = []; m.text = "my-next-app" } }
     @Test func newFolderAmongMatches() { shot("16-new-folder-matches") { m in m.reset(); m.projects = Self.sample(); m.live = []; m.text = "claude-launch" } }
-    @Test func optionsDefault() { shot("6-default") { m in m.reset(); for i in 0..<3 { m.pick(0, of: i) } } }
 }
