@@ -43,7 +43,7 @@ Each moment has one purpose:
 
 ![A folder](docs/folder.png)
 
-**Starting a new project?** Type a name that is no folder yet, like `my-next-app`, and the last line offers **New folder** where it would go: a bare name under `~/Developer` (or your home folder without one), a path exactly as typed. It sits apart, under **New project**, and is already highlighted when nothing else matches. **↵**, your shortcut or **⌘N** (from anywhere while typing) creates it and starts Claude in it.
+**Starting a new project?** Type a name that is no folder yet, like `my-next-app`, and the last line offers **Create folder**, showing where it would go: a bare name under `~/Developer` (or your home folder without one), a path exactly as typed. It sits apart, under **New project**, and is already highlighted when nothing else matches. **↵**, your shortcut or **⌘N** (from anywhere while typing) creates it and starts Claude in it.
 
 **Press your shortcut again** to start a new session at once: in the folder you are in, the highlighted one, or your home folder. Type `laaabs`, press ⌥C, and Claude starts there.
 
