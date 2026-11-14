@@ -41,11 +41,14 @@ struct MainView: View {
                         RunningList(model: model, theme: theme)
                     }
                 case .folders:
-                    if !model.rows.isEmpty {
-                        rowsView
-                    } else if let folder = model.typedFolder {
+                    if !model.rows.isEmpty { rowsView }
+                    if let path = model.newFolder, let index = model.newFolderIndex {
+                        // a name that is no folder yet: make it, for a new project
+                        NewFolderLine(model: model, index: index, path: path, theme: theme)
+                            .padding(.bottom, 8)
+                    } else if model.rows.isEmpty, let folder = model.typedFolder {
                         hint("↵  Open \(folder.isEmpty ? "~" : folder)")
-                    } else {
+                    } else if model.rows.isEmpty {
                         hint("No folder matches.")
                     }
                 case .step:
@@ -58,9 +61,10 @@ struct MainView: View {
                         ? .asymmetric(insertion: .opacity.combined(with: .offset(x: 12)), removal: .opacity)
                         : .opacity)
 
-            // one footer everywhere, its left side changing with what can be done
+            // how a session starts, where one does
+            // the keys that act here, and the plan's use, everywhere
             divider
-            OptionsSection(model: model, theme: theme)
+            CommandBar(model: model, theme: theme)
         }
         .frame(width: Self.width)
         .fixedSize(horizontal: false, vertical: true)
@@ -539,6 +543,87 @@ private struct ScrollingList<Content: View>: View {
     }
 }
 
+/// a folder that does not exist yet, to start a new project in: its own section, a line like the
+/// others. enter, the shortcut or ⌘N make it and start claude in it
+private struct NewFolderLine: View {
+    @ObservedObject var model: MainModel
+    let index: Int
+    let path: String
+    let theme: AppTheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SectionLabel(title: "New project", hint: "", theme: theme)
+            ListLine(model: model, index: index,
+                     icon: AnyView(Image(systemName: "folder.badge.plus").font(.system(size: 13)).foregroundStyle(theme.icon)),
+                     title: theme.say("Create folder"), folder: path,
+                     trailing: AnyView(KeyHint(keys: ["⌘N"], label: "Create and start", theme: theme)),
+                     theme: theme)
+        }
+    }
+}
+
+/// the bottom bar, the same everywhere: on the left what the keys do here, following what is lit;
+/// on the right the plan's use
+private struct CommandBar: View {
+    @ObservedObject var model: MainModel
+    let theme: AppTheme
+
+    var body: some View {
+        HStack(spacing: 0) {
+            HStack(spacing: 22) {
+                ForEach(Array(hints.enumerated()), id: \.offset) { _, hint in
+                    KeyHint(keys: [hint.key], label: hint.label, theme: theme).help(hint.help)
+                }
+            }
+            .padding(.leading, 8)
+            .layoutPriority(0)
+            Spacer(minLength: 24)
+            if let usage = model.usage {
+                UsageLine(usage: usage, theme: theme).layoutPriority(1)
+            }
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 20)
+        .frame(height: 40)
+        .animation(.easeOut(duration: 0.12), value: model.moment)
+    }
+
+    private struct Hint { let key: String; let label: String; let help: String }
+
+    /// what the keys do here, always with a way to a new session
+    private var hints: [Hint] {
+        let lit = model.selected
+        let shortcut = Shortcut.text
+        let newSession = Hint(key: "⌘↵", label: "New session", help: "Start a new session at once (or press \(shortcut))")
+        switch model.moment {
+        case .running:
+            if model.live.isEmpty { return [newSession] }
+            return [lit == nil
+                        ? Hint(key: "↓", label: "Choose", help: "Highlight a running session")
+                        : Hint(key: "↵", label: "Open", help: "Go to the session's window"),
+                    newSession]
+        case .folders:
+            let creating = lit != nil && lit == model.newFolderIndex
+            return [creating
+                        ? Hint(key: "↵", label: "Create", help: "Create the folder and start Claude in it")
+                        : Hint(key: "↵", label: "Open", help: "Open the folder to start or resume a session"),
+                    newSession]
+        case .step:
+            let items = model.stepItems
+            switch lit.flatMap({ items.indices.contains($0) ? items[$0] : nil }) {
+            case .running:
+                return [Hint(key: "↵", label: "Go to", help: "Go to the session's window"), newSession]
+            case .past:
+                return [Hint(key: "↵", label: "Resume", help: "Resume the session in this folder"), newSession]
+            default:
+                return [Hint(key: "↵", label: "New session", help: "Start a new session in this folder"),
+                        Hint(key: "esc", label: "Back", help: "Back to the folders")]
+            }
+        }
+    }
+}
+
 /// what opens first: every claude code session running now, with its state as claude's code view
 /// shows it. enter goes to one.
 private struct RunningList: View {
@@ -593,7 +678,7 @@ private struct StepList: View {
                     case .new:
                         ListLine(model: model, index: i, icon: AnyView(Image(systemName: "plus").font(.system(size: 12, weight: .medium)).foregroundStyle(theme.textRow)),
                                  title: theme.say("New session"), folder: nil,
-                                 trailing: AnyView(Text("↵").foregroundStyle(theme.textMuted.opacity(i == model.selected ? 0.9 : 0))), theme: theme)
+                                 trailing: AnyView(EmptyView()), theme: theme)
                         if items.count > 1 {
                             SectionLabel(title: "Sessions", hint: "", theme: theme)
                         }

@@ -19,11 +19,19 @@ One shortcut for Claude Code on your Mac. Press **⌥C** anywhere to see every C
 
 ## Install
 
+<p>
+  <a href="https://github.com/aaangelmartin/claude-launcher/releases/latest/download/claude-launcher.zip"><img alt="Download for macOS" src="https://img.shields.io/badge/Download_for_macOS-D97757?style=for-the-badge&logo=apple&logoColor=white"></a>
+</p>
+
+Download the zip, open it and move **Claude Launcher** to Applications. It is signed and notarized by Apple, so it opens like any other app.
+
+Or with [Homebrew](https://brew.sh), in one line:
+
 ```sh
 brew install --cask aaangelmartin/tap/claude-launcher
 ```
 
-Then open **Claude Launcher** from Applications. The first launch walks you through a short setup: it checks that Claude Code is installed, asks for permission to control Terminal, and lets you pick your shortcut.
+Then open **Claude Launcher**. The first launch walks you through a short setup: it checks that Claude Code is installed, asks for permission to control Terminal, and lets you pick your shortcut.
 
 ### Requirements
 
@@ -43,7 +51,11 @@ Each moment has one purpose:
 
 ![A folder](docs/folder.png)
 
-**Press your shortcut again** to start a new session at once: in the folder you are in, the highlighted one, or your home folder. Type `laaabs`, press ⌥C, and Claude starts there.
+**Starting a new project?** Type a name that is no folder yet, like `my-next-app`, and the last line offers **Create folder**, showing where it would go: a bare name under `~/Developer` (or your home folder without one), a path exactly as typed. It sits apart, under **New project**, and is already highlighted when nothing else matches. **↵**, your shortcut or **⌘N** (from anywhere while typing) creates it and starts Claude in it.
+
+**Press your shortcut again** (or **⌘↵**) to start a new session at once: in the folder you are in, the highlighted one, or your home folder. Type `laaabs`, press ⌥C, and Claude starts there.
+
+The bottom bar always says what the keys do where you are, and always how to start a new session.
 
 ### Session states
 
@@ -57,17 +69,9 @@ Running sessions show the states Claude's Code view filters by:
 
 What needs you comes first.
 
-### Launch options
+### Model, effort and permissions
 
-When a session starts or resumes, the bar at the bottom shows how: **model**, **effort** and **permissions**. **⌥↓** (or a click on a value) opens them.
-
-![Launch options](docs/options.png)
-
-- **Model**: Fable, Opus, Sonnet, Haiku, with the numbers read from your installed `claude`, so they update with it.
-- **Effort**: low to max. The level each model starts with is marked *default*.
-- **Permissions**: Manual, Accept edits, Plan, Auto, Bypass. The mode your settings choose is marked *default*.
-
-They start from the defaults every time, and picking a default adds no flag, so Claude keeps following its own settings.
+Claude Launcher starts Claude with its own defaults and leaves these to Claude Code, where they already live: `/model`, `/effort` and **⇧⇥** for the permission mode, inside the session.
 
 ### Plan use
 
@@ -79,10 +83,10 @@ On the right of the bottom bar: your five-hour session and weekly use, as `/usag
 |---|---|
 | **⌥C** | bring up Claude Launcher; again, start a new session at once |
 | **↑ ↓** | move through the list |
-| **↵** | go to a running session, open a folder, start or resume a session |
+| **↵** | go to a running session, open a folder, create a new one, start or resume a session |
 | **⌘↵** | start a new session at once |
+| **⌘N** | create the folder typed and start Claude in it |
 | **Tab** | highlight the first line; on a folder, complete its path |
-| **⌥↓ ⌥↑** | open and fold the launch options |
 | **esc** | back out one step: the folder, what is typed, then the window |
 | **⌘,** | the setup again (shortcut, checks) |
 | **⌘Q** | quit |
@@ -123,7 +127,8 @@ swift test                  # the tests
 ## Uninstall
 
 ```sh
-brew uninstall --cask claude-launcher
+brew uninstall --cask claude-launcher        # installed with Homebrew
+rm -rf "/Applications/Claude Launcher.app"    # installed from the zip
 ```
 
 Remove it from System Settings → General → Login Items if it is still listed.

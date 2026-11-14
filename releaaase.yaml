@@ -20,7 +20,7 @@ platforms:
 github:
   repo: aaangelmartin/claude-launcher
   assets:
-  - dist/claude-launcher-v{version}.zip
+  - dist/claude-launcher.zip
 
 changelog: CHANGELOG.md
 

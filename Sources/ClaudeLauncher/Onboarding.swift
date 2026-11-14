@@ -195,7 +195,7 @@ private struct WelcomeStep: View {
             VStack(alignment: .leading, spacing: 16) {
                 feature("circle.dashed", "Running sessions", "Every session at a glance, and what it needs from you. ↵ takes you to its window.")
                 feature("folder", "Any folder", "Type a folder to start a new session there, or to resume one of its past ones.")
-                feature("slider.horizontal.3", "Your way", "Model, effort and permissions, right before a session starts.")
+                feature("folder.badge.plus", "New projects", "Type a name that is no folder yet, and Claude starts in a fresh one.")
             }
         }
     }

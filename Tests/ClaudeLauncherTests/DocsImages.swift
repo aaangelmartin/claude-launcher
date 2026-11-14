@@ -52,10 +52,6 @@ import Testing
         folder.text = "Developer/claude-launcher"; _ = folder.handle(.enter)
         render("folder", Backdrop { MainView(model: folder) })
 
-        let options = MainModel(); options.reset(); Self.sample(options); options.live = []
-        options.text = "Developer/claude-launcher"; _ = options.handle(.enter)
-        options.pick(3, of: LaunchOptions.effort); _ = options.handle(.optionsDown); _ = options.handle(.down)
-        render("options", Backdrop { MainView(model: options) })
 
         render("setup", Backdrop { OnboardingView(step: .welcome).environmentObject(KeyPress()) })
         render("banner", Banner())
