@@ -85,5 +85,6 @@ import Testing
     @Test func fuzzy() { shot("10-fuzzy") { m in m.reset(); m.projects = Self.sample(); m.text = "abr" } }
     @Test func newMode() { shot("11-new") { m in m.reset(); m.projects = Self.sample(); m.text = "Developer"; _ = m.handle(.enter) } }
     @Test func newFolder() { shot("15-new-folder") { m in m.reset(); m.projects = Self.sample(); m.live = []; m.text = "my-next-app" } }
+    @Test func newFolderAmongMatches() { shot("16-new-folder-matches") { m in m.reset(); m.projects = Self.sample(); m.live = []; m.text = "claude-launch" } }
     @Test func optionsDefault() { shot("6-default") { m in m.reset(); for i in 0..<3 { m.pick(0, of: i) } } }
 }

@@ -43,7 +43,7 @@ Each moment has one purpose:
 
 ![A folder](docs/folder.png)
 
-**Starting a new project?** Type a name that is no folder yet, like `my-next-app`, and the last line offers **New folder** where it would go: a bare name under `~/Developer` (or your home folder without one), a path exactly as typed. When nothing else matches it is already highlighted. **↵** or your shortcut creates it and starts Claude in it.
+**Starting a new project?** Type a name that is no folder yet, like `my-next-app`, and the last line offers **New folder** where it would go: a bare name under `~/Developer` (or your home folder without one), a path exactly as typed. It sits apart, under **New project**, and is already highlighted when nothing else matches. **↵**, your shortcut or **⌘N** (from anywhere while typing) creates it and starts Claude in it.
 
 **Press your shortcut again** to start a new session at once: in the folder you are in, the highlighted one, or your home folder. Type `laaabs`, press ⌥C, and Claude starts there.
 
@@ -61,7 +61,7 @@ What needs you comes first.
 
 ### Launch options
 
-When a session starts or resumes, the bar at the bottom shows how: **model**, **effort** and **permissions**. **⌥↓** (or a click on a value) opens them.
+When a session starts or resumes, a row above the bottom bar shows how: **model**, **effort** and **permissions**. **⌥↓** (or a click on a value) opens them. The bottom bar itself always says what the keys do where you are, with your plan use on the right.
 
 ![Launch options](docs/options.png)
 
@@ -73,7 +73,7 @@ They start from the defaults every time, and picking a default adds no flag, so 
 
 ### Plan use
 
-On the right of the bottom bar: your five-hour session and weekly use, as `/usage` shows them, with the time left until each resets. They turn yellow from 80 % and red from 95 %.
+On the right of the bottom bar, everywhere: your five-hour session and weekly use, as `/usage` shows them, with the time left until each resets. They turn yellow from 80 % and red from 95 %.
 
 ## Keys
 
@@ -83,6 +83,7 @@ On the right of the bottom bar: your five-hour session and weekly use, as `/usag
 | **↑ ↓** | move through the list |
 | **↵** | go to a running session, open a folder, create a new one, start or resume a session |
 | **⌘↵** | start a new session at once |
+| **⌘N** | create the folder typed and start Claude in it |
 | **Tab** | highlight the first line; on a folder, complete its path |
 | **⌥↓ ⌥↑** | open and fold the launch options |
 | **esc** | back out one step: the folder, what is typed, then the window |

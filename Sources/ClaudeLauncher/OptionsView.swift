@@ -22,7 +22,7 @@ struct OptionsSection: View {
     let theme: AppTheme
     @Namespace private var focus
 
-    static let foldedHeight: CGFloat = 44
+    static let foldedHeight: CGFloat = 40
     static let rowHeight: CGFloat = 40
     static let sliderHeight: CGFloat = 78
     static let modesHeight: CGFloat = 40
@@ -75,60 +75,27 @@ struct OptionsSection: View {
 
     /// the bottom bar: on the left what can be done (the launch values and ⌥↓ to change them, or over
     /// the running sessions the keys that act on them), on the right the plan's use
+    /// folded: how a new or resumed session is launched, ⌥↓ (or a click) to change it. the keys and
+    /// the plan's use live in the command bar under it
     private var summary: some View {
-        HStack(spacing: 0) {
-            ZStack(alignment: .leading) {
-                if model.moment == .running {
-                    keys.transition(.opacity)
-                } else {
-                    HStack(spacing: 2) {
-                        // the key first, then what it opens
-                        KeyCap(key: "⌥↓", theme: theme)
-                            .padding(.leading, 8)
-                            .padding(.trailing, 2)
-                            .help("Change model, effort and permissions")
-                        launchValues
-                    }
-                    .transition(.opacity)
-                }
-            }
-            .animation(.easeOut(duration: 0.12), value: model.moment == .running)
-            // the left side gives way (truncates) rather than pushing the bar
-            .layoutPriority(0)
-            Spacer(minLength: 24)
-            if let usage = model.usage {
-                UsageLine(usage: usage, theme: theme)
-                    .layoutPriority(1)
-                    .transition(.opacity)
-            }
+        HStack(spacing: 2) {
+            KeyCap(key: "⌥↓", theme: theme)
+                .padding(.leading, 8)
+                .padding(.trailing, 2)
+                .help("Change model, effort and permissions")
+            launchValues
+            Spacer(minLength: 8)
         }
         .font(theme.chip)
         .padding(.leading, 12)
         .padding(.trailing, 20)
         .frame(height: Self.foldedHeight)
         .contentShape(Rectangle())
-        .onTapGesture { if model.moment != .running { model.openOptions() } }
+        .onTapGesture { model.openOptions() }
     }
 
     /// the window's shortcut as typed on its key caps, ⌥C unless another was picked
     static var shortcutText: String { KeyboardShortcuts.getShortcut(for: .openClaude)?.description ?? "⌥C" }
-
-    /// over the running sessions nothing is launched: what the keys do there, said plainly
-    private var keys: some View {
-        // the same width whatever is lit, so nothing moves as the arrows go
-        let lit = model.selected != nil
-        // the arrows' key first, new session after it, a steady gap between them. the shortcut also
-        // starts a session; only ⌘↵ is drawn
-        return HStack(spacing: 24) {
-            if !model.live.isEmpty {
-                KeyHint(keys: [lit ? "↵" : "↓"], label: lit ? "Open" : "Choose", theme: theme)
-                    .help(lit ? "Go to the session's window" : "Highlight a running session")
-            }
-            KeyHint(keys: ["⌘↵"], label: "New session", theme: theme)
-                .help(lit ? "Start a new session in that session's folder (or press \(Self.shortcutText))" : "Start a new session in your home folder (or press \(Self.shortcutText))")
-        }
-        .padding(.leading, 8)
-    }
 
     private var launchValues: some View {
         HStack(spacing: 0) {

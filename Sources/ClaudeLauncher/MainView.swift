@@ -45,8 +45,7 @@ struct MainView: View {
                     if let path = model.newFolder, let index = model.newFolderIndex {
                         // a name that is no folder yet: make it, for a new project
                         NewFolderLine(model: model, index: index, path: path, theme: theme)
-                            .padding(.top, model.rows.isEmpty ? 6 : 0)
-                            .padding(.bottom, 6)
+                            .padding(.bottom, 8)
                     } else if model.rows.isEmpty, let folder = model.typedFolder {
                         hint("↵  Open \(folder.isEmpty ? "~" : folder)")
                     } else if model.rows.isEmpty {
@@ -62,9 +61,15 @@ struct MainView: View {
                         ? .asymmetric(insertion: .opacity.combined(with: .offset(x: 12)), removal: .opacity)
                         : .opacity)
 
-            // one footer everywhere, its left side changing with what can be done
+            // how a session starts, where one does
+            if model.moment != .running {
+                divider
+                OptionsSection(model: model, theme: theme)
+                    .transition(.opacity)
+            }
+            // the keys that act here, and the plan's use, everywhere
             divider
-            OptionsSection(model: model, theme: theme)
+            CommandBar(model: model, theme: theme)
         }
         .frame(width: Self.width)
         .fixedSize(horizontal: false, vertical: true)
@@ -543,19 +548,120 @@ private struct ScrollingList<Content: View>: View {
     }
 }
 
-/// a folder that does not exist yet, to start a new project in: enter makes it and starts claude there
+/// a folder that does not exist yet, to start a new project in. its own section, apart from the
+/// folders found; lit, it takes claude's orange. enter, the shortcut or ⌘N make it and start claude
 private struct NewFolderLine: View {
     @ObservedObject var model: MainModel
     let index: Int
     let path: String
     let theme: AppTheme
 
+    private let clay = Color(hex: 0xD97757)
+
     var body: some View {
-        ListLine(model: model, index: index,
-                 icon: AnyView(Image(systemName: "folder.badge.plus").font(.system(size: 13)).foregroundStyle(Color(hex: 0xD97757))),
-                 title: theme.say("New folder"), folder: path,
-                 trailing: AnyView(Text(theme.say("Create and start")).foregroundStyle(theme.textMuted.opacity(0.8))),
-                 theme: theme)
+        let on = model.selected == index
+        let shown = FolderPath.display(path)
+        VStack(alignment: .leading, spacing: 0) {
+            SectionLabel(title: "New project", hint: "", theme: theme)
+            HStack(spacing: 0) {
+                Image(systemName: "folder.badge.plus")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(clay)
+                    .frame(width: MainView.barHeight - 16)
+                    .padding(.trailing, 8)
+                Text(theme.say("Create folder"))
+                    .font(theme.row)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(on ? theme.text : theme.textRow)
+                Text(shown.isEmpty ? "~" : shown)
+                    .font(theme.label)
+                    .foregroundStyle(theme.textMuted)
+                    .lineLimit(1)
+                    .truncationMode(.head)
+                    .padding(.leading, 10)
+                Spacer(minLength: 12)
+                KeyHint(keys: ["⌘N"], label: "Create and start", theme: theme)
+            }
+            .padding(.trailing, 12)
+            .frame(height: MainView.rowHeight)
+            .background {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(on ? clay.opacity(0.16) : clay.opacity(0.05))
+                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(clay.opacity(on ? 0.45 : 0.18), lineWidth: 0.5))
+            }
+            .padding(.horizontal, 8)
+            .contentShape(Rectangle())
+            .onContinuousHover { phase in if case .active = phase { model.point(at: index) } }
+            .onTapGesture { model.act(on: index) }
+            .animation(.easeOut(duration: 0.1), value: on)
+        }
+    }
+}
+
+/// the bottom bar, the same everywhere: on the left what the keys do here, following what is lit;
+/// on the right the plan's use
+private struct CommandBar: View {
+    @ObservedObject var model: MainModel
+    let theme: AppTheme
+
+    var body: some View {
+        HStack(spacing: 0) {
+            HStack(spacing: 22) {
+                ForEach(Array(hints.enumerated()), id: \.offset) { _, hint in
+                    KeyHint(keys: [hint.key], label: hint.label, theme: theme).help(hint.help)
+                }
+            }
+            .padding(.leading, 8)
+            .layoutPriority(0)
+            Spacer(minLength: 24)
+            if let usage = model.usage {
+                UsageLine(usage: usage, theme: theme).layoutPriority(1)
+            }
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 20)
+        .frame(height: 40)
+        .animation(.easeOut(duration: 0.12), value: model.moment)
+    }
+
+    private struct Hint { let key: String; let label: String; let help: String }
+
+    private var hints: [Hint] {
+        let lit = model.selected
+        let shortcut = OptionsSection.shortcutText
+        switch model.moment {
+        case .running:
+            var list: [Hint] = []
+            if !model.live.isEmpty {
+                list.append(lit == nil
+                    ? Hint(key: "↓", label: "Choose", help: "Highlight a running session")
+                    : Hint(key: "↵", label: "Open", help: "Go to the session's window"))
+            }
+            list.append(Hint(key: "⌘↵", label: "New session", help: lit == nil
+                ? "Start a new session in your home folder (or press \(shortcut))"
+                : "Start a new session in that session's folder (or press \(shortcut))"))
+            return list
+        case .folders:
+            let creating = lit != nil && lit == model.newFolderIndex
+            var list = [creating
+                ? Hint(key: "↵", label: "Create", help: "Create the folder and start Claude in it")
+                : Hint(key: "↵", label: "Open", help: "Open the folder to start or resume a session")]
+            if model.newFolder != nil {
+                list.append(Hint(key: "⌘N", label: "New folder", help: "Create the folder typed and start Claude in it"))
+            } else {
+                list.append(Hint(key: "⌘↵", label: "New session", help: "Start a new session there at once (or press \(shortcut))"))
+            }
+            return list
+        case .step:
+            let items = model.stepItems
+            let label: String = switch lit.flatMap({ items.indices.contains($0) ? items[$0] : nil }) {
+            case .running: "Go to"
+            case .past: "Resume"
+            default: "Start"
+            }
+            return [Hint(key: "↵", label: label, help: "Start, go to or resume the highlighted line"),
+                    Hint(key: "esc", label: "Back", help: "Back to the folders")]
+        }
     }
 }
 

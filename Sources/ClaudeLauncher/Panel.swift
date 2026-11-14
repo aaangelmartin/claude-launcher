@@ -164,6 +164,9 @@ final class PanelController: NSObject, NSWindowDelegate {
             NSApp.terminate(nil)
             return true
         }
+        if mods.contains(.command), event.charactersIgnoringModifiers == "n" {
+            return model.handle(.createFolder)
+        }
         if mods.contains(.command), event.charactersIgnoringModifiers == "," {
             hide()
             onSetup()

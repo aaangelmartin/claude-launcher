@@ -21,6 +21,7 @@ final class MainModel: ObservableObject {
         case jumpDown, jumpUp // ⌘↓ ⌘↑
         case optionsDown, optionsUp // ⌥↓ ⌥↑: open and fold the options
         case openNew // ⌘↵: a new session at once
+        case createFolder // ⌘N: make the folder typed and start claude in it
     }
 
     /// one line of a folder's step
@@ -406,6 +407,10 @@ final class MainModel: ObservableObject {
     /// one key, wherever the arrows are. false: not ours, the field gets it (←→ move the caret there,
     /// space types a space).
     func handle(_ key: Key) -> Bool {
+        if key == .createFolder {
+            if newFolder != nil { createAndStart() } else { NSSound.beep() }
+            return true
+        }
         if key == .optionsDown { if moment != .running { optionRow = optionRow ?? 0 }; return true }
         if key == .optionsUp { optionRow = nil; return true }
         if let optionRow { return handleOptions(key, optionRow) }
@@ -442,7 +447,7 @@ final class MainModel: ObservableObject {
             guard moment == .step else { return false }
             closeStep()
         case .space: return false // spaces belong to the field
-        case .optionsDown, .optionsUp: break
+        case .optionsDown, .optionsUp, .createFolder: break
         }
         return true
     }
@@ -460,7 +465,7 @@ final class MainModel: ObservableObject {
         case .right: step(row, by: 1)
         case .enter: if selected != nil { submit() } else { openNew() }
         case .openNew: openNew()
-        case .space, .optionsDown, .optionsUp: break
+        case .space, .optionsDown, .optionsUp, .createFolder: break
         }
         return true
     }
